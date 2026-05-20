@@ -117,12 +117,12 @@ export default function AdminStaffPage() {
         </Button>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white border border-border shadow-sm p-6 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Search by email, name, or ID..." 
-            className="pl-10 h-11 bg-muted/20 border-border"
+            className="pl-10 h-11 bg-white border-border"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -132,10 +132,10 @@ export default function AdminStaffPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
+            <thead className="text-xs text-muted-foreground uppercase bg-gray-50 border-b border-border">
               <tr>
                 <th className="p-4 font-bold tracking-wider">Account Identity</th>
                 <th className="p-4 font-bold tracking-wider">Assigned Role</th>
@@ -143,7 +143,15 @@ export default function AdminStaffPage() {
                 <th className="p-4 font-bold tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <motion.tbody 
+              className="divide-y divide-border"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+              }}
+            >
               {isLoading ? (
                 <tr>
                   <td colSpan={4} className="p-12 text-center">
@@ -160,7 +168,14 @@ export default function AdminStaffPage() {
                 </tr>
               ) : (
                 filteredStaff.map((member) => (
-                  <tr key={member.id} className="hover:bg-muted/10 transition-colors group">
+                  <motion.tr 
+                    key={member.id} 
+                    className="hover:bg-gray-50 transition-colors group"
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                  >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
@@ -168,19 +183,19 @@ export default function AdminStaffPage() {
                         </div>
                         <div>
                           <p className="font-bold text-foreground">{member.name || 'Unregistered Name'}</p>
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
                             <span>{member.email}</span>
-                            {member.staff_id && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono uppercase">{member.staff_id}</span>}
+                            {member.staff_id && <span className="text-[10px] bg-gray-100 border border-border px-1.5 py-0.5 rounded font-mono uppercase">{member.staff_id}</span>}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        member.role === 'admin' ? 'bg-purple-500/10 text-purple-600' :
-                        member.role === 'registrar' ? 'bg-blue-500/10 text-blue-600' :
-                        member.role === 'lab' ? 'bg-amber-500/10 text-amber-600' :
-                        'bg-emerald-500/10 text-emerald-600'
+                        member.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                        member.role === 'registrar' ? 'bg-blue-100 text-blue-700' :
+                        member.role === 'lab' ? 'bg-amber-100 text-amber-700' :
+                        'bg-emerald-100 text-emerald-700'
                       }`}>
                         {member.role}
                       </span>
@@ -197,14 +212,14 @@ export default function AdminStaffPage() {
                       )}
                     </td>
                     <td className="p-4 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10">
                         <Eye className="w-4 h-4" />
                       </Button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
-            </tbody>
+            </motion.tbody>
           </table>
         </div>
       </div>

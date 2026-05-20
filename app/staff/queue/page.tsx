@@ -168,13 +168,13 @@ export default function StaffQueuePage() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto">
-            <div className="bg-white rounded-lg border border-border p-1 flex">
+            <div className="bg-gray-100 rounded-lg p-1 flex">
               {(['All', 'Pending', 'Attended', 'Missed'] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                    filter === f ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    filter === f ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-gray-200'
                   }`}
                 >
                   {f}
@@ -185,7 +185,7 @@ export default function StaffQueuePage() {
               variant="outline" 
               onClick={() => setShowBulkMissed1(true)}
               disabled={!currentSchedule?.isActive || activeQueue.filter(s => !rowStatus[s.userId]).length === 0}
-              className="gap-2 border-destructive/20 text-destructive hover:bg-destructive/5 text-xs shrink-0"
+              className="gap-2 border-destructive/20 text-destructive hover:bg-destructive/10 text-xs shrink-0 bg-white"
             >
               <XCircle className="w-4 h-4" /> Mark All Missed
             </Button>
@@ -193,10 +193,10 @@ export default function StaffQueuePage() {
         </div>
 
         {/* Immersive Queue Table Card */}
-        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[700px]">
-              <thead className="bg-muted/30 border-b border-border">
+              <thead className="bg-gray-50 border-b border-border">
                 <tr>
                   <th className="text-left p-4 font-bold text-muted-foreground">Queue #</th>
                   <th className="text-left p-4 font-bold text-muted-foreground">Student Info</th>
@@ -205,7 +205,15 @@ export default function StaffQueuePage() {
                   <th className="text-right p-4 font-bold text-muted-foreground">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
+              <motion.tbody 
+                className="divide-y divide-border"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                }}
+              >
                 {!currentSchedule?.isActive ? (
                   <tr>
                     <td colSpan={5} className="p-16 text-center text-muted-foreground">
@@ -231,16 +239,15 @@ export default function StaffQueuePage() {
                       <motion.tr
                         key={student.userId}
                         layout
-                        animate={{
-                          backgroundColor: rowSt === 'attended' ? 'rgba(11,94,60,0.07)' :
-                                           rowSt === 'missed'   ? 'rgba(192,57,43,0.07)' :
-                                           isActiveSlot         ? 'rgba(232,150,12,0.10)' : 'transparent'
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 }
                         }}
                         transition={{ duration: 0.3 }}
-                        className={`group relative ${
-                          isActiveSlot && !rowSt ? 'border-l-4 border-l-amber-500' :
-                          rowSt === 'attended'  ? 'border-l-4 border-l-primary' :
-                          rowSt === 'missed'    ? 'border-l-4 border-l-destructive' : ''
+                        className={`group relative hover:bg-gray-50 transition-colors ${
+                          isActiveSlot && !rowSt ? 'border-l-4 border-l-amber-500 bg-amber-50' :
+                          rowSt === 'attended'  ? 'border-l-4 border-l-green-600 bg-green-50' :
+                          rowSt === 'missed'    ? 'border-l-4 border-l-red-600 bg-red-50' : ''
                         }`}
                       >
                         <td className="p-4 font-mono font-bold text-primary">{student.phaseNumbers[phase as 1|2|3]}</td>
@@ -257,25 +264,25 @@ export default function StaffQueuePage() {
                         </td>
                         <td className="p-4">
                           {rowSt === 'attended' ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">
                               <CheckCircle2 className="w-3.5 h-3.5" /> Attended
                             </span>
                           ) : rowSt === 'missed' ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-destructive/10 text-destructive rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-destructive/20 text-destructive rounded-full text-[10px] font-bold uppercase tracking-wider">
                               <XCircle className="w-3.5 h-3.5" /> Missed
                             </span>
                           ) : (
-                            <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-[10px] font-bold uppercase tracking-wider">Pending</span>
+                            <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-border">Pending</span>
                           )}
                         </td>
                         <td className="p-4 text-right">
                           {!rowSt ? (
                             student.canProcess === false ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                 <Lock className="w-3.5 h-3.5" /> Locked until {timeStr}
                               </span>
                             ) : (
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
                                   size="sm"
                                   className="bg-primary hover:bg-primary/90 text-white gap-1.5 h-8 px-3"
@@ -285,7 +292,7 @@ export default function StaffQueuePage() {
                                 </Button>
                                 <Button
                                   size="sm" variant="outline"
-                                  className="border-destructive/50 text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-3"
+                                  className="border-destructive/50 text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-3 bg-white"
                                   onClick={() => handleAbsent(student)}
                                 >
                                   <XCircle className="w-3.5 h-3.5" /> <span>Missed</span>
@@ -305,7 +312,7 @@ export default function StaffQueuePage() {
                     </td>
                   </tr>
                 )}
-              </tbody>
+              </motion.tbody>
             </table>
           </div>
         </div>

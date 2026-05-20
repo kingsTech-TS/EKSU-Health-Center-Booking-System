@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Menu, X, LogOut, Heart, Bell } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
@@ -22,6 +23,7 @@ interface SidebarLayoutProps {
 
 export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayoutProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, logout } = useAuthStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -70,7 +72,7 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`bg-card border-r border-border/30 flex flex-col transition-all duration-300 glass-dark fixed lg:relative h-full z-40 lg:z-auto ${
+        className={`bg-white border-r border-border flex flex-col transition-all duration-300 fixed lg:relative h-full z-40 lg:z-auto ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:w-20 lg:translate-x-0'
         }`}
       >
@@ -84,14 +86,21 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link key={item.label} href={item.href}>
-              <div className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:shadow-[inset_4px_0_0_0_rgba(var(--primary))] transition-smooth group cursor-pointer">
-                <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-primary transition-smooth" />
-                {sidebarOpen && <span className="font-medium truncate">{item.label}</span>}
-              </div>
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <Link key={item.label} href={item.href}>
+                <div className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
+                  isActive 
+                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' 
+                    : 'text-muted-foreground hover:bg-gray-100 hover:text-foreground'
+                }`}>
+                  <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? 'text-primary-foreground' : 'group-hover:text-primary'}`} />
+                  {sidebarOpen && <span className="font-medium truncate">{item.label}</span>}
+                </div>
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Notifications Trigger */}
@@ -136,10 +145,9 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden relative">
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay pointer-events-none" />
         
         {/* Mobile Header */}
-        <header className="lg:hidden h-16 border-b border-border/30 flex items-center justify-between px-4 glass-dark shrink-0 relative z-30">
+        <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-white shrink-0 relative z-30">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <Heart className="w-5 h-5 text-primary-foreground" />
@@ -162,7 +170,18 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
           <div className="max-w-7xl mx-auto h-full">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.99 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="h-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
