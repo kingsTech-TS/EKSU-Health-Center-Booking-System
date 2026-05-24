@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from 'react-hot-toast'
+import { API_BASE_URL } from '@/lib/api-config'
 
 interface ActivityLog {
   id: string
@@ -28,8 +29,7 @@ export default function AdminActivityPage() {
   const fetchActivities = async () => {
     setIsLoading(true)
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const res = await fetch(`${apiBase}/api/v1/admin/activities`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/activities`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -61,18 +61,18 @@ export default function AdminActivityPage() {
 
   const getActionIcon = (action: string) => {
     const act = action.toLowerCase()
-    if (act.includes('check_in') || act.includes('present')) return <CheckCircle2 className="w-4 h-4 text-green-600" />
-    if (act.includes('missed') || act.includes('absent')) return <XCircle className="w-4 h-4 text-red-600" />
-    if (act.includes('schedule')) return <Calendar className="w-4 h-4 text-blue-600" />
-    return <Activity className="w-4 h-4 text-gray-500" />
+    if (act.includes('check_in') || act.includes('present')) return <CheckCircle2 className="w-4 h-4 text-primary" />
+    if (act.includes('missed') || act.includes('absent')) return <XCircle className="w-4 h-4 text-destructive" />
+    if (act.includes('schedule')) return <Calendar className="w-4 h-4 text-blue-500" />
+    return <Activity className="w-4 h-4 text-muted-foreground" />
   }
 
   const getActionColor = (action: string) => {
     const act = action.toLowerCase()
-    if (act.includes('check_in') || act.includes('present')) return 'bg-green-50'
-    if (act.includes('missed') || act.includes('absent')) return 'bg-red-50'
-    if (act.includes('schedule')) return 'bg-blue-50'
-    return 'bg-gray-50'
+    if (act.includes('check_in') || act.includes('present')) return 'bg-primary/10'
+    if (act.includes('missed') || act.includes('absent')) return 'bg-destructive/10'
+    if (act.includes('schedule')) return 'bg-blue-500/10'
+    return 'bg-muted/30'
   }
 
   return (
@@ -100,7 +100,7 @@ export default function AdminActivityPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-16 text-center">
             <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary/50" />
@@ -112,24 +112,9 @@ export default function AdminActivityPage() {
             <p>No activity records found matching criteria.</p>
           </div>
         ) : (
-          <motion.div 
-            className="divide-y divide-border"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-            }}
-          >
-            {filteredLogs.map((log) => (
-              <motion.div 
-                key={log.id} 
-                variants={{
-                  hidden: { opacity: 0, y: 10 },
-                  visible: { opacity: 1, y: 0 }
-                }}
-                className="p-6 hover:bg-gray-50 transition-colors flex flex-col md:flex-row gap-4 md:items-center"
-              >
+          <div className="divide-y divide-border/50">
+            {filteredLogs.map((log, index) => (
+              <div key={log.id ? String(log.id) : `log-${index}`} className="p-6 hover:bg-muted/10 transition-colors flex flex-col md:flex-row gap-4 md:items-center">
                 <div className="flex items-start gap-4 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-1 ${getActionColor(log.action)}`}>
                     {getActionIcon(log.action)}
@@ -143,21 +128,21 @@ export default function AdminActivityPage() {
                     </p>
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-xs font-mono text-muted-foreground">
-                      <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md border border-border">
+                      <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
                         <User className="w-3.5 h-3.5" /> 
                         <span className="font-bold text-foreground">{log.staff_name || log.staff_id}</span>
-                        {log.role && <span className="uppercase text-[9px] border border-border px-1 ml-1 rounded">{log.role}</span>}
+                        {log.role && <span className="uppercase text-[9px] border px-1 ml-1 rounded">{log.role}</span>}
                       </div>
-                      <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md border border-border">
+                      <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         {new Date(log.timestamp).toLocaleString()}
                       </div>
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

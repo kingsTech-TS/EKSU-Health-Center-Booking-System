@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { ShieldCheck, ArrowRight, Loader2, User, Phone, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from 'react-hot-toast'
+import { formatError } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/api-config'
 
 export default function StaffOnboardingPage() {
   const router = useRouter()
@@ -25,16 +27,15 @@ export default function StaffOnboardingPage() {
 
     setLoading(true)
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const res = await fetch(`${apiBase}/api/v1/staff/onboarding`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/staff/onboarding`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          full_name: name,
-          phone_number: phone,
+          name: name,
+          phone: phone,
           staff_id: staffId
         })
       })
@@ -44,7 +45,7 @@ export default function StaffOnboardingPage() {
         
         // Update local user state
         if (user) {
-          const updatedUser = { ...user, name, staffId, onboarding_completed: true }
+          const updatedUser = { ...user, name, phone, staffId, onboarding_completed: true }
           setUser(updatedUser)
           sessionStorage.setItem('user', JSON.stringify(updatedUser))
         }
@@ -57,8 +58,8 @@ export default function StaffOnboardingPage() {
           default: router.push('/staff/queue'); break;
         }
       } else {
-        const err = await res.json()
-        toast.error(err.detail || 'Failed to complete setup.')
+        const errData = await res.json()
+        toast.error(formatError(errData.detail) || 'Failed to complete setup.')
       }
     } catch (e) {
       toast.error('Network error during profile setup.')

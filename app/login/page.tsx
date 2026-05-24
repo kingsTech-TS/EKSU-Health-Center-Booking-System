@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label'
 import { ArrowRight, Loader2, Heart } from 'lucide-react'
 import { useAuthStore, UserRole } from '@/store/auth-store'
 import { toast } from 'react-hot-toast'
+import { formatError } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/api-config'
 
 const loginSchema = z.object({
   identifier: z.string().min(3, 'Required'),
@@ -60,33 +62,11 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      let role: UserRole = 'student'
-      const iden = data.identifier.toLowerCase()
-
-      if (activeTab === 'staff') {
-        if (iden.includes('registrar')) role = 'registrar'
-        else if (iden.includes('lab')) role = 'lab'
-        else if (iden.includes('nurse')) role = 'nurse'
-        else if (iden.includes('admin')) role = 'admin'
-        else {
-          toast.error('Invalid Staff ID')
-          setLoading(false)
-          return
-        }
-      } else {
-        if (!iden.startsWith('eksu/')) {
-          toast.error('Invalid Matric Number (Try: EKSU/2023/...)')
-          setLoading(false)
-          return
-        }
-      }
-
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
       const formData = new URLSearchParams()
       formData.append('username', data.identifier)
       formData.append('password', data.password)
 
-      const response = await fetch(`${apiBase}/api/v1/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -96,21 +76,25 @@ export default function LoginPage() {
 
       const resData = await response.json()
       if (!response.ok) {
-        throw new Error(resData.detail || 'Incorrect credentials. Please try again.')
+        throw new Error(formatError(resData.detail) || 'Incorrect email/ID or password')
       }
 
       const token = resData.access_token
       const decoded = decodeJWT(token)
 
+      // Get role from decoded token or default to tab selection if not present
+      const userRole = resData.role || decoded?.role || (activeTab === 'staff' ? 'registrar' : 'student')
+
       // Fallback mappings to match User state
       const mappedUser = {
-        id: decoded?.sub || decoded?.id || Math.random().toString(36).substring(7),
-        name: decoded?.name || (role.charAt(0).toUpperCase() + role.slice(1) + ' User'),
-        email: decoded?.email || `${role}@eksu.edu`,
-        role: decoded?.role || role,
-        matricNumber: decoded?.matric_number || (role === 'student' ? data.identifier.toUpperCase() : undefined),
-        staffId: decoded?.staff_id || (role !== 'student' ? data.identifier.toUpperCase() : undefined),
-        onboarding_completed: decoded?.onboarding_completed !== undefined ? decoded.onboarding_completed : true,
+        id: decoded?.sub || decoded?.id || resData.id || Math.random().toString(36).substring(7),
+        name: resData.name || decoded?.name || (userRole.charAt(0).toUpperCase() + userRole.slice(1) + ' User'),
+        email: resData.email || decoded?.email || (data.identifier.includes('@') ? data.identifier : `${userRole}@eksu.edu`),
+        role: userRole,
+        matricNumber: resData.matric_number || decoded?.matric_number || (userRole === 'student' && !data.identifier.includes('@') ? data.identifier.toUpperCase() : undefined),
+        staffId: resData.staff_id || decoded?.staff_id || (userRole !== 'student' && !data.identifier.includes('@') ? data.identifier.toUpperCase() : undefined),
+        onboarding_completed: resData.onboarding_completed !== undefined ? resData.onboarding_completed : (decoded?.onboarding_completed !== undefined ? decoded.onboarding_completed : true),
+        is_active: resData.is_active !== undefined ? resData.is_active : (decoded?.is_active !== undefined ? decoded.is_active : true),
       }
 
       setUser(mappedUser)
@@ -121,6 +105,12 @@ export default function LoginPage() {
       toast.success('Login Successful')
 
       setTimeout(() => {
+        // Redirect logic based on role and onboarding status
+        if (mappedUser.role !== 'student' && mappedUser.role !== 'admin' && !mappedUser.onboarding_completed) {
+          router.push('/staff/onboarding')
+          return
+        }
+
         switch (mappedUser.role) {
           case 'student': router.push('/student/dashboard'); break;
           case 'registrar': router.push('/staff/phase1'); break;
@@ -139,7 +129,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B5E3C]/20 via-[#1A1A2E] to-[#1A1A2E] p-4 relative overflow-hidden text-[#F4F7F5]">
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay z-0 pointer-events-none" />
       
       <div className="w-full max-w-md relative z-10">
         <Link href="/" className="flex items-center justify-center gap-3 mb-8 hover:scale-105 transition-transform">
@@ -191,11 +180,11 @@ export default function LoginPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-sm font-bold text-foreground">
-                {activeTab === 'student' ? 'Matric Number' : 'Staff ID'}
+                {activeTab === 'student' ? 'Matric Number or Email' : 'Staff ID or Email'}
               </Label>
               <Input
                 id="identifier"
-                placeholder={activeTab === 'student' ? 'EKSU/2023/...' : 'registrar / lab / nurse'}
+                placeholder={activeTab === 'student' ? 'EKSU/2023/... or email' : 'staff_id or email'}
                 className={`focus-visible:ring-primary ${errors.identifier ? 'border-destructive' : ''}`}
                 {...register('identifier')}
               />

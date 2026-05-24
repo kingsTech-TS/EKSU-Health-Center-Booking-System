@@ -14,6 +14,8 @@ import { ArrowRight, Loader2, Heart, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
 import { useRegistrationStore } from '@/store/registration-store'
 import { toast } from 'react-hot-toast'
+import { formatError } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/api-config'
 import confetti from 'canvas-confetti'
 
 const signupSchema = z.object({
@@ -103,8 +105,7 @@ export default function SignupPage() {
         return
       }
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const regResponse = await fetch(`${apiBase}/api/v1/auth/register`, {
+      const regResponse = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ export default function SignupPage() {
 
       const regData = await regResponse.json()
       if (!regResponse.ok) {
-        throw new Error(regData.detail || 'Registration failed. Please contact the admin.')
+        throw new Error(formatError(regData.detail) || 'Registration failed. Please contact the admin.')
       }
 
       // Auto-login under-the-hood for seamless UX
@@ -128,7 +129,7 @@ export default function SignupPage() {
       formData.append('username', data.email)
       formData.append('password', data.password)
 
-      const loginResponse = await fetch(`${apiBase}/api/v1/auth/login`, {
+      const loginResponse = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -178,7 +179,6 @@ export default function SignupPage() {
     <div className="min-h-screen flex text-[#1A1A2E]">
       {/* Left Illustration Panel */}
       <div className="hidden lg:flex w-1/2 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B5E3C] via-[#08452c] to-[#042417] p-12 flex-col justify-between relative overflow-hidden text-white">
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay z-0 pointer-events-none" />
         
         {/* Abstract SVG Background */}
         <svg className="absolute -bottom-20 -right-20 w-[600px] h-[600px] text-white/5 opacity-50 z-0" viewBox="0 0 100 100">

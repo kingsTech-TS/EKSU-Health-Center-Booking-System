@@ -3,9 +3,13 @@
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
 import { LayoutDashboard, ListChecks, CalendarDays, Users, Bell } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
+import { usePathname } from 'next/navigation'
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
+  const pathname = usePathname()
+
+  const isOnboarding = pathname === '/staff/onboarding'
 
   const getPhaseHref = () => {
     if (user?.role === 'registrar') return '/staff/phase1'
@@ -23,6 +27,10 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     { icon: Users,           label: 'All Students', href: '/staff/students' },
     { icon: Bell,            label: 'Notifications', href: '/staff/notifications' },
   ]
+
+  if (isOnboarding) {
+    return <>{children}</>
+  }
 
   return (
     <SidebarLayout navItems={navItems} requiredRole="staff">

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAuthStore } from './auth-store'
+import { API_BASE_URL } from '@/lib/api-config'
 
 export type PhaseType = 1 | 2 | 3 | 4
 
@@ -69,7 +70,6 @@ const generateAppointmentNumber = (phase: number, order: number) => {
 }
 
 const apiFetch = async (path: string, options: RequestInit = {}) => {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
   const token = useAuthStore.getState().token || (typeof window !== 'undefined' ? sessionStorage.getItem('token') : null)
   
   const headers = {
@@ -78,7 +78,7 @@ const apiFetch = async (path: string, options: RequestInit = {}) => {
     ...options.headers,
   }
 
-  const response = await fetch(`${apiBase}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
   })
@@ -138,21 +138,21 @@ export const useRegistrationStore = create<RegistrationState>()(
       },
 
       setSchedule: async (phase, schedule) => {
-        try {
-          const res = await apiFetch('/api/v1/staff/schedule', {
-            method: 'POST',
-            body: JSON.stringify({
-              phase,
-              date: schedule.date,
-              start_time: schedule.startTime,
-              end_time: schedule.endTime,
-              duration_per_student: schedule.durationPerStudent,
-              max_students: schedule.maxStudents
-            })
+        const res = await apiFetch('/api/v1/staff/schedule', {
+          method: 'POST',
+          body: JSON.stringify({
+            phase,
+            date: schedule.date,
+            start_time: schedule.startTime,
+            end_time: schedule.endTime,
+            duration_per_student: schedule.durationPerStudent,
+            max_students: schedule.maxStudents
           })
-          if (!res.ok) throw new Error('Failed to publish schedule on backend')
-        } catch (e) {
-          console.warn('Backend schedule publication failed, using fallback:', e)
+        })
+
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.detail || 'Failed to publish schedule')
         }
 
         set((state) => ({

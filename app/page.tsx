@@ -23,7 +23,6 @@ export default function Home() {
     <main className="min-h-screen relative overflow-hidden bg-[#1A1A2E] text-[#F4F7F5]">
       {/* Background Gradient Mesh */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B5E3C]/40 via-[#1A1A2E] to-[#1A1A2E] z-0 pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay z-0 pointer-events-none" />
 
       {/* Navbar / Logo */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-8 md:px-12">

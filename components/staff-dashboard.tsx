@@ -137,10 +137,24 @@ export function StaffDashboard({ phase, title, description }: StaffDashboardProp
     return matchesSearch
   })
 
-  const handleSaveSchedule = () => {
-    setSchedule(phase, config)
-    setShowConfirmModal(false)
-    toast.success(`Schedule activated for Phase ${phase}. Calling ${config.maxStudents} students.`)
+  const handleSaveSchedule = async () => {
+    // Basic Client-side validation
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(config.date)
+    selectedDate.setHours(0, 0, 0, 0)
+
+    if (selectedDate < today) {
+      return toast.error('Cannot create schedule for a past date.')
+    }
+
+    try {
+      await setSchedule(phase, config)
+      setShowConfirmModal(false)
+      toast.success(`Schedule activated for Phase ${phase}. Calling ${config.maxStudents} students.`)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to publish schedule')
+    }
   }
 
   const handlePresent = (student: Student) => {
@@ -287,6 +301,7 @@ export function StaffDashboard({ phase, title, description }: StaffDashboardProp
                 <Label htmlFor="date" className="text-xs font-bold text-muted-foreground uppercase">Date</Label>
                 <Input 
                   id="date" type="date" 
+                  min={format(new Date(), 'yyyy-MM-dd')}
                   value={config.date} onChange={(e) => setConfig({ ...config, date: e.target.value })}
                   className="focus-visible:ring-primary"
                 />

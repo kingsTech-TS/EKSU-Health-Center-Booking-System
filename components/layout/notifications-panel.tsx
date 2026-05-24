@@ -63,13 +63,13 @@ export function NotificationsPanel({ isOpen, onClose }: { isOpen: boolean, onClo
             <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
               {notifications.length > 0 ? (
                 <div className="divide-y divide-border/50">
-                  {notifications.map((notif) => {
+                  {notifications.map((notif, index) => {
                     const Icon = notif.type === 'success' ? CheckCircle2 : notif.type === 'warn' ? AlertTriangle : Info
                     const colorClass = notif.type === 'success' ? 'text-primary bg-primary/10' : notif.type === 'warn' ? 'text-destructive bg-destructive/10' : 'text-blue-500 bg-blue-500/10'
 
                     return (
                       <div 
-                        key={notif.id}
+                        key={notif.id || index}
                         onClick={() => markAsRead(notif.id)}
                         className={`p-4 hover:bg-muted/30 transition-colors cursor-pointer relative ${!notif.read ? 'bg-primary/5' : ''}`}
                       >

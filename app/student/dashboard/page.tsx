@@ -160,7 +160,7 @@ export default function StudentDashboardPage() {
       </motion.div>
 
       {/* Progress Pipeline */}
-      <motion.div variants={itemVariants} className="bg-white border border-border shadow-sm rounded-2xl p-6">
+      <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm border border-border p-6">
         <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-6">Clearance Progress</h3>
         <div className="relative flex justify-between items-center max-w-3xl mx-auto">
           {/* Connecting Line Background */}
@@ -227,7 +227,7 @@ export default function StudentDashboardPage() {
               <h2 className="text-3xl font-bold font-display text-primary uppercase">Registration Complete!</h2>
               <p className="text-muted-foreground max-w-md mx-auto">You have been fully cleared by the EKSU Health Center.</p>
               
-              <div className="mt-6 bg-white border border-primary/20 shadow-sm rounded-xl p-4 inline-block">
+              <div className="mt-6 bg-white border border-primary/20 rounded-xl p-4 inline-block">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Clearance ID</p>
                 <p className="text-xl font-mono font-bold text-foreground">{studentData.phaseNumbers[3] || 'CLR-2025-00392'}</p>
               </div>
@@ -257,7 +257,7 @@ export default function StudentDashboardPage() {
             </div>
           </div>
         ) : !isScheduledToday ? (
-          <div className="bg-white border border-border shadow-sm rounded-2xl p-8 text-center space-y-4 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-border p-8 text-center space-y-4 shadow-sm relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-5">
                <Calendar className="w-48 h-48" />
              </div>
@@ -273,7 +273,7 @@ export default function StudentDashboardPage() {
              </div>
           </div>
         ) : (
-          <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
             <div className="bg-secondary/10 border-b border-secondary/20 p-4 flex items-center justify-between">
               <span className="font-bold text-secondary uppercase tracking-wider text-sm flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
@@ -282,7 +282,7 @@ export default function StudentDashboardPage() {
                 </span>
                 Scheduled for Today
               </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="px-3 py-1 bg-[#A8E6CF]/20 text-[#0B5E3C] rounded-full text-xs font-bold uppercase tracking-wider">
                 Phase {currentPhase}
               </span>
             </div>
@@ -314,7 +314,7 @@ export default function StudentDashboardPage() {
               </div>
 
               {timeUntil && (
-                <div className="bg-gray-50 rounded-xl p-6 border border-border min-w-[250px] text-center shadow-inner">
+                <div className="bg-background rounded-xl p-6 border border-border min-w-[250px] text-center shadow-inner">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Time Until Appointment</p>
                   <div className="flex justify-center gap-3 font-mono text-2xl font-bold text-primary">
                     <div className="flex flex-col items-center"><span className="bg-primary/10 px-3 py-2 rounded-lg">{timeUntil.h.toString().padStart(2, '0')}</span><span className="text-[10px] mt-1 text-muted-foreground font-sans">HRS</span></div>
@@ -332,7 +332,7 @@ export default function StudentDashboardPage() {
 
       {/* Bottom Stats Row */}
       <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white border border-border shadow-sm p-6 rounded-2xl flex items-center gap-4">
+        <div className="bg-white p-6 rounded-xl border border-border shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -342,7 +342,7 @@ export default function StudentDashboardPage() {
           </div>
         </div>
         
-        <div className="bg-white border border-border shadow-sm p-6 rounded-2xl flex items-center gap-4">
+        <div className="bg-white p-6 rounded-xl border border-border shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
             <Calendar className="w-6 h-6" />
           </div>
@@ -354,8 +354,8 @@ export default function StudentDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-border shadow-sm p-6 rounded-2xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center text-primary">
+        <div className="bg-white p-6 rounded-xl border border-border shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-primary">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>

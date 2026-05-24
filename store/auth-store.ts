@@ -10,7 +10,9 @@ export interface User {
   role: UserRole
   matricNumber?: string
   staffId?: string
+  phone_number?: string
   onboarding_completed?: boolean
+  is_active?: boolean
 }
 
 interface AuthState {

@@ -19,10 +19,10 @@ import {
 
 // Mock Data
 const mockStats = [
-  { label: 'Total Students', value: 4520, icon: Users, color: 'text-teal-600', bg: 'bg-teal-50' },
-  { label: 'Fully Cleared', value: 3150, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
-  { label: 'Appts Today', value: 342, icon: CalendarIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
-  { label: 'Missed Appts', value: 89, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
+  { label: 'Total Students', value: 4520, icon: Users, color: 'text-primary' },
+  { label: 'Fully Cleared', value: 3150, icon: CheckCircle2, color: 'text-green-500' },
+  { label: 'Appts Today', value: 342, icon: CalendarIcon, color: 'text-secondary' },
+  { label: 'Missed Appts', value: 89, icon: AlertTriangle, color: 'text-destructive' },
 ]
 
 const mockStudents = Array.from({ length: 50 }).map((_, i) => ({
@@ -45,7 +45,7 @@ const pieData = [
   { name: 'Phase 3', value: 300 },
   { name: 'Cleared', value: 200 },
 ]
-const PIE_COLORS = ['#f97316', '#2dd4bf', '#fbbf24', '#f87171']
+const PIE_COLORS = ['#0B5E3C', '#E8960C', '#A8E6CF', '#C0392B']
 
 export default function AdminDashboardPage() {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
         const val = info.getValue()
         return (
           <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-            val === 4 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+            val === 4 ? 'bg-green-500/10 text-green-500' : 'bg-secondary/10 text-secondary'
           }`}>
             {val === 4 ? 'Cleared' : `Phase ${val}`}
           </span>
@@ -139,14 +139,14 @@ export default function AdminDashboardPage() {
           <motion.div 
             key={i}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            className={`p-6 rounded-2xl flex items-center gap-4 ${stat.bg}`}
+            className="bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4"
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-white/50 ${stat.color}`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-muted/50 ${stat.color}`}>
               <stat.icon className="w-6 h-6" />
             </div>
             <div>
-              <p className={`text-xs font-bold uppercase tracking-widest ${stat.color}`}>{stat.label}</p>
-              <p className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value.toLocaleString()}</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
+              <p className="text-2xl font-bold font-mono text-foreground">{stat.value.toLocaleString()}</p>
             </div>
           </motion.div>
         ))}
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
 
       {/* Analytics Charts */}
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white border border-border shadow-sm p-6 rounded-2xl">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-border shadow-sm">
           <h3 className="font-bold mb-4 font-display text-lg text-foreground">Weekly Appointments</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -163,13 +163,13 @@ export default function AdminDashboardPage() {
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }} />
-                <Bar dataKey="appts" fill="#f97316" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="appts" fill="#0B5E3C" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white border border-border shadow-sm p-6 rounded-2xl">
+        <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
           <h3 className="font-bold mb-4 font-display text-lg text-foreground">Phase Distribution</h3>
           <div className="h-64 flex flex-col justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -193,8 +193,8 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* CSV Upload Zone */}
-      <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
-        <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-muted/30 px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="font-bold font-display text-foreground flex items-center gap-2">
             <UploadCloud className="w-5 h-5 text-primary" /> Record Upload
           </h3>
@@ -213,7 +213,7 @@ export default function AdminDashboardPage() {
               {csvPreview.length === 0 && (
                 <div 
                   className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-                    isDragOver ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border bg-gray-50 hover:bg-gray-100'
+                    isDragOver ? 'border-primary bg-primary/10 scale-[1.01]' : 'border-primary/30 bg-primary/5 hover:bg-primary/10'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="overflow-x-auto rounded-xl border border-border">
                     <table className="w-full text-xs">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-muted/30">
                         <tr>
                           {csvHeaders.map((h, i) => <th key={i} className="p-3 text-left font-bold text-muted-foreground uppercase tracking-wider">{h}</th>)}
                         </tr>
@@ -287,7 +287,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Student Records Table */}
-      <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between gap-4">
           <div className="relative max-w-sm w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -302,7 +302,7 @@ export default function AdminDashboardPage() {
         
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-border">
+            <thead className="bg-muted/30 border-b border-border">
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
             </thead>
             <tbody className="divide-y divide-border/50">
               {table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="hover:bg-white/5 transition-colors cursor-pointer">
+                <tr key={row.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="p-4">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

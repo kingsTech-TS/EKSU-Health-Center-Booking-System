@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShieldCheck, Search, Plus, Mail, Key, UserPlus, CheckCircle2, AlertTriangle, Eye, Loader2, Filter } from 'lucide-react'
+import { ShieldCheck, Search, Plus, Mail, Key, UserPlus, CheckCircle2, AlertTriangle, Eye, Loader2, Filter, Trash2, Ban, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/auth-store'
 import { toast } from 'react-hot-toast'
+import { formatError } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/api-config'
 
 interface StaffMember {
   id: string
   email: string
   role: 'registrar' | 'lab' | 'nurse' | 'admin'
   onboarding_completed: boolean
+  is_active: boolean
   name?: string
   phone?: string
   staff_id?: string
@@ -26,6 +29,8 @@ export default function AdminStaffPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState<string | null>(null)
 
   // Form state
   const [newEmail, setNewEmail] = useState('')
@@ -35,8 +40,7 @@ export default function AdminStaffPage() {
   const fetchStaff = async () => {
     setIsLoading(true)
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const res = await fetch(`${apiBase}/api/v1/admin/staff`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/staff`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,8 +69,7 @@ export default function AdminStaffPage() {
 
     setIsCreating(true)
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-      const res = await fetch(`${apiBase}/api/v1/admin/staff`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/staff`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,13 +90,83 @@ export default function AdminStaffPage() {
         setNewRole('registrar')
         fetchStaff()
       } else {
-        const err = await res.json()
-        toast.error(err.detail || 'Failed to create staff')
+        const errData = await res.json()
+        toast.error(formatError(errData.detail) || 'Failed to create staff')
       }
     } catch (e) {
       toast.error('Network error creating staff')
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  const handleSuspend = async (staffId: string) => {
+    setIsProcessing(staffId)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/staff/${staffId}/suspend`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success('Staff member suspended')
+        fetchStaff()
+      } else {
+        const errData = await res.json()
+        toast.error(formatError(errData.detail) || 'Failed to suspend staff')
+      }
+    } catch (e) {
+      toast.error('Network error')
+    } finally {
+      setIsProcessing(null)
+    }
+  }
+
+  const handleUnsuspend = async (staffId: string) => {
+    setIsProcessing(staffId)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/staff/${staffId}/unsuspend`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success('Staff member unsuspended')
+        fetchStaff()
+      } else {
+        const errData = await res.json()
+        toast.error(formatError(errData.detail) || 'Failed to unsuspend staff')
+      }
+    } catch (e) {
+      toast.error('Network error')
+    } finally {
+      setIsProcessing(null)
+    }
+  }
+
+  const handleDelete = async (staffId: string) => {
+    setIsProcessing(staffId)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/staff/${staffId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        toast.success('Staff member deleted permanently')
+        setDeleteConfirmId(null)
+        fetchStaff()
+      } else {
+        const errData = await res.json()
+        toast.error(formatError(errData.detail) || 'Failed to delete staff')
+      }
+    } catch (e) {
+      toast.error('Network error')
+    } finally {
+      setIsProcessing(null)
     }
   }
 
@@ -117,12 +190,12 @@ export default function AdminStaffPage() {
         </Button>
       </div>
 
-      <div className="bg-white border border-border shadow-sm p-6 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Search by email, name, or ID..." 
-            className="pl-10 h-11 bg-white border-border"
+            className="pl-10 h-11 bg-muted/20 border-border"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -132,94 +205,135 @@ export default function AdminStaffPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-border shadow-sm rounded-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="text-xs text-muted-foreground uppercase bg-gray-50 border-b border-border">
+            <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
               <tr>
                 <th className="p-4 font-bold tracking-wider">Account Identity</th>
                 <th className="p-4 font-bold tracking-wider">Assigned Role</th>
-                <th className="p-4 font-bold tracking-wider">Onboarding Status</th>
+                <th className="p-4 font-bold tracking-wider">Status</th>
+                <th className="p-4 font-bold tracking-wider">Onboarding</th>
                 <th className="p-4 font-bold tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <motion.tbody 
-              className="divide-y divide-border"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-              }}
-            >
+            <tbody className="divide-y divide-border/50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center">
+                  <td colSpan={5} className="p-12 text-center">
                     <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary/50" />
                     <p className="mt-4 text-muted-foreground">Loading staff directory...</p>
                   </td>
                 </tr>
               ) : filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center text-muted-foreground">
+                  <td colSpan={5} className="p-12 text-center text-muted-foreground">
                     <ShieldCheck className="w-12 h-12 mx-auto mb-4 opacity-20" />
                     <p>No staff accounts found.</p>
                   </td>
                 </tr>
               ) : (
-                filteredStaff.map((member) => (
-                  <motion.tr 
-                    key={member.id} 
-                    className="hover:bg-gray-50 transition-colors group"
-                    variants={{
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 }
-                    }}
-                  >
+                filteredStaff.map((member, index) => (
+                  <tr key={member.id || index} className={`hover:bg-muted/10 transition-colors group ${!member.is_active ? 'opacity-60 grayscale-[0.5]' : ''}`}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${
+                          !member.is_active ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'
+                        }`}>
                           {member.email.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <p className="font-bold text-foreground">{member.name || 'Unregistered Name'}</p>
-                          <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
+                          <div className="flex items-center gap-2 text-muted-foreground">
                             <span>{member.email}</span>
-                            {member.staff_id && <span className="text-[10px] bg-gray-100 border border-border px-1.5 py-0.5 rounded font-mono uppercase">{member.staff_id}</span>}
+                            {member.staff_id && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono uppercase">{member.staff_id}</span>}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        member.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                        member.role === 'registrar' ? 'bg-blue-100 text-blue-700' :
-                        member.role === 'lab' ? 'bg-amber-100 text-amber-700' :
-                        'bg-emerald-100 text-emerald-700'
+                        member.role === 'admin' ? 'bg-purple-500/10 text-purple-600' :
+                        member.role === 'registrar' ? 'bg-blue-500/10 text-blue-600' :
+                        member.role === 'lab' ? 'bg-amber-500/10 text-amber-600' :
+                        'bg-emerald-500/10 text-emerald-600'
                       }`}>
                         {member.role}
                       </span>
                     </td>
                     <td className="p-4">
+                      {member.is_active ? (
+                        <span className="inline-flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
+                          <CheckCircle className="w-4 h-4" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-destructive text-xs font-bold">
+                          <Ban className="w-4 h-4" /> Suspended
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4">
                       {member.onboarding_completed ? (
                         <span className="inline-flex items-center gap-1.5 text-primary text-xs font-bold">
-                          <CheckCircle2 className="w-4 h-4" /> Setup Complete
+                          <CheckCircle2 className="w-4 h-4" /> Done
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-amber-500 text-xs font-bold">
-                          <AlertTriangle className="w-4 h-4" /> Pending Setup
+                          <AlertTriangle className="w-4 h-4" /> Pending
                         </span>
                       )}
                     </td>
                     <td className="p-4 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10">
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          title="View Profile"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        
+                        {member.role !== 'admin' && (
+                          <>
+                            {member.is_active ? (
+                              <Button 
+                                variant="ghost" size="icon" 
+                                className="h-8 w-8 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                                onClick={() => handleSuspend(member.id)}
+                                disabled={isProcessing === member.id}
+                                title="Suspend Account"
+                              >
+                                {isProcessing === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" size="icon" 
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleUnsuspend(member.id)}
+                                disabled={isProcessing === member.id}
+                                title="Unsuspend Account"
+                              >
+                                {isProcessing === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                              </Button>
+                            )}
+                            
+                            <Button 
+                              variant="ghost" size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/5"
+                              onClick={() => setDeleteConfirmId(member.id)}
+                              disabled={isProcessing === member.id}
+                              title="Delete Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))
               )}
-            </motion.tbody>
+            </tbody>
           </table>
         </div>
       </div>
@@ -303,6 +417,45 @@ export default function AdminStaffPage() {
                     </Button>
                   </div>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => setDeleteConfirmId(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-destructive/20 overflow-hidden p-8 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-6">
+                <Trash2 className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Permanent Deletion</h3>
+              <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
+                This will permanently remove the staff member from the database. This action is irreversible.
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1 h-12" onClick={() => setDeleteConfirmId(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 h-12 bg-destructive hover:bg-destructive/90 text-white" 
+                  onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+                  disabled={isProcessing === deleteConfirmId}
+                >
+                  {isProcessing === deleteConfirmId ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Delete Forever'}
+                </Button>
               </div>
             </motion.div>
           </div>
