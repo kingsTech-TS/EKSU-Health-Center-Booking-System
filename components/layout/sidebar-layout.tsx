@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Menu, X, LogOut, Heart, Bell } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
@@ -24,12 +25,24 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
   const router = useRouter()
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Default to closed for mobile-first
   const [mounted, setMounted] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
+  // Initialize sidebar based on screen size
   useEffect(() => {
     setMounted(true)
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true)
+      } else {
+        setSidebarOpen(false)
+      }
+    }
+
+    handleResize() // Initial check
+    window.addEventListener('resize', handleResize)
+    
     if (!user) {
       const storedUser = sessionStorage.getItem('user')
       if (!storedUser) {
@@ -38,7 +51,18 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
       }
     }
 
-    // Role Guard Check
+    return () => window.removeEventListener('resize', handleResize)
+  }, [user, router])
+
+  // Auto-close sidebar on route change on mobile
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false)
+    }
+  }, [pathname])
+
+  // Role Guard Check
+  useEffect(() => {
     if (user && requiredRole) {
       if (requiredRole === 'staff' && !['registrar', 'lab', 'nurse'].includes(user.role)) {
         router.push('/login')
@@ -152,12 +176,17 @@ export function SidebarLayout({ children, navItems, requiredRole }: SidebarLayou
         </header>
 
         {/* Mobile Sidebar Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">

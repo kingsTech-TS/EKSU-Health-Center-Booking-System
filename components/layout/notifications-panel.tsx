@@ -44,7 +44,7 @@ export function NotificationsPanel({ isOpen, onClose }: { isOpen: boolean, onClo
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ type: 'spring', duration: 0.3 }}
-            className="absolute top-20 right-4 lg:right-8 w-[350px] bg-white rounded-2xl shadow-2xl border border-border z-50 overflow-hidden"
+            className="absolute top-20 right-4 lg:right-8 w-[calc(100vw-32px)] sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-border z-50 overflow-hidden"
           >
             <div className="bg-muted/30 p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
